@@ -7,7 +7,7 @@ namespace project_music.Services.AudioFiles
     public class AudioFileService : IAudioFileService
     {
         private readonly MusicDbContext _context;
-        private readonly IWebHostEnvironment _env; // Cung cấp thông tin về ổ cứng máy chủ
+        private readonly IWebHostEnvironment _env; 
 
         public AudioFileService(MusicDbContext context, IWebHostEnvironment env)
         {
@@ -41,14 +41,12 @@ namespace project_music.Services.AudioFiles
             var uniqueFileName = Guid.NewGuid().ToString() + extension;
             var filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
-            // 4. Copy file lên ổ cứng máy chủ
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
                 await file.CopyToAsync(stream);
             }
 
-            // 5. Lưu đường dẫn vào Database MySQL
-            var fileUrl = $"/audios/{uniqueFileName}"; // Đường dẫn ảo để Web/App đọc
+            var fileUrl = $"/audios/{uniqueFileName}"; 
             var newAudio = new AudioFile
             {
                 FileId = Guid.NewGuid().ToString(),
@@ -67,7 +65,6 @@ namespace project_music.Services.AudioFiles
                 SongId = newAudio.SongId,
                 Quality = newAudio.Quality,
                 FileUrl = newAudio.FileUrl,
-                SizeBytes = newAudio.SizeBytes
             };
         }
     }

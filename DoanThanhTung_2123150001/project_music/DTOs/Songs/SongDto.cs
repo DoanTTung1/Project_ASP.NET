@@ -2,7 +2,6 @@
 
 namespace project_music.DTOs.Songs
 {
-    // Class phụ: Chứa thông tin file nhạc rút gọn (ẩn bớt songId cho đỡ lặp)
     public class SongAudioFileResponse
     {
         public string FileId { get; set; } = null!;
@@ -10,7 +9,12 @@ namespace project_music.DTOs.Songs
         public string FileUrl { get; set; } = null!;
         public long SizeBytes { get; set; }
     }
-
+    public class SongArtistResponse
+    {
+        public string ArtistId { get; set; } = null!;
+        public string Name { get; set; } = null!;
+        public string Role { get; set; } = null!;
+    }
     public class SongResponse
     {
         public string SongId { get; set; } = null!;
@@ -22,8 +26,14 @@ namespace project_music.DTOs.Songs
 
         // ĐIỂM MẤU CHỐT: Thêm một danh sách các file nhạc vào đây
         public List<SongAudioFileResponse> AudioFiles { get; set; } = new List<SongAudioFileResponse>();
+        public List<SongArtistResponse> Artists { get; set; }= new List<SongArtistResponse>();
     }
-
+    public class SongArtistRequest
+    {
+        [Required(ErrorMessage ="Mã ca sĩ không được để trống")]
+        public string ArtistId { get; set; } = null!;
+        public string Role { get; set; } = "MAIN";
+    }
     public class CreateSongRequest
     {
         [Required(ErrorMessage = "Tên bài hát không được để trống")]
@@ -36,5 +46,7 @@ namespace project_music.DTOs.Songs
 
         public DateOnly? ReleaseDate { get; set; }
         public string? AlbumId { get; set; }
+        [Required(ErrorMessage = "Phải có ít nhất một ca sĩ cho bài hát")]
+        public List<SongArtistRequest> Artists { get; set; } = new List<SongArtistRequest>();
     }
 }

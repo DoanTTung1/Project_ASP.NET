@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http; // Bắt buộc phải có để dùng IFormFile
+﻿using Microsoft.AspNetCore.Http; 
 using System.ComponentModel.DataAnnotations;
 
 namespace project_music.DTOs.AudioFiles
@@ -21,6 +21,6 @@ namespace project_music.DTOs.AudioFiles
         public string Quality { get; set; } = null!;
 
         [Required(ErrorMessage = "Vui lòng chọn file âm thanh")]
-        public IFormFile File { get; set; } = null!; // Đây là "túi ba gang" để hứng file thật
+        public IFormFile File { get; set; } = null!; 
     }
 }

@@ -1,11 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using project_music.DTOs.Artists;
 using project_music.Services.Artists;
-
+using Microsoft.AspNetCore.Authorization;
 namespace project_music.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class ArtistsController : ControllerBase
     {
         private readonly IArtistService _artistService;
@@ -17,6 +18,7 @@ namespace project_music.Controllers
 
         // GET: api/Artists
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAll()
         {
             var artists = await _artistService.GetAllArtistsAsync();
@@ -25,6 +27,7 @@ namespace project_music.Controllers
 
         // GET: api/Artists/{id}
         [HttpGet("{id}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetById(string id)
         {
             var artist = await _artistService.GetArtistByIdAsync(id);

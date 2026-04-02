@@ -87,7 +87,9 @@ public partial class MusicDbContext : DbContext
             entity.Property(e => e.Title)
                 .HasMaxLength(200)
                 .HasColumnName("title");
-
+            entity.Property(e=> e.IsDeleted)
+            .HasDefaultValueSql("'0'")
+            .HasColumnName("is_deleted");
             entity.HasOne(d => d.Artist).WithMany(p => p.Albums)
                 .HasForeignKey(d => d.ArtistId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -115,6 +117,9 @@ public partial class MusicDbContext : DbContext
             entity.Property(e => e.Name)
                 .HasMaxLength(100)
                 .HasColumnName("name");
+            entity.Property(e => e.IsDeleted)
+            .HasDefaultValueSql("'0'")
+            .HasColumnName("is_deleted");
         });
 
         modelBuilder.Entity<ArtistSong>(entity =>
@@ -317,7 +322,9 @@ public partial class MusicDbContext : DbContext
             entity.Property(e => e.UserId)
                 .HasMaxLength(36)
                 .HasColumnName("user_id");
-
+            entity.Property(e=> e.IsDeleted)
+            .HasDefaultValueSql("'0'")
+            .HasColumnName("is_deleted");
             entity.HasOne(d => d.User).WithMany(p => p.Playlists)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -580,6 +587,15 @@ public partial class MusicDbContext : DbContext
             entity.Property(e => e.Username)
                 .HasMaxLength(50)
                 .HasColumnName("username");
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValueSql("'0'")
+                .HasColumnName("is_deleted");
+            entity.Property(e => e.RefreshToken)
+                .HasMaxLength(255)
+                .HasColumnName("refresh_token");
+            entity.Property(e => e.RefreshTokenExpiryTime)
+                .HasColumnType("datetime")
+                .HasColumnName("refresh_token_expiry_time");
         });
 
         modelBuilder.Entity<UserDownload>(entity =>

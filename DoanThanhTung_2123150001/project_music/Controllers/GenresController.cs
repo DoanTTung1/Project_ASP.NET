@@ -1,11 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using project_music.DTOs.Genres;     // Trỏ đến thư mục DTO mới
-using project_music.Services.Genres; // Trỏ đến thư mục Service mới
-
+using project_music.DTOs.Genres;     
+using project_music.Services.Genres;
+using Microsoft.AspNetCore.Authorization;
 namespace project_music.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class GenresController : ControllerBase
     {
         private readonly IGenreService _genreService;
@@ -16,9 +17,11 @@ namespace project_music.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAll() => Ok(await _genreService.GetAllAsync());
 
         [HttpGet("{id}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _genreService.GetByIdAsync(id);

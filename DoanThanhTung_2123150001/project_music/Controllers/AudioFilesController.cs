@@ -1,11 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using project_music.DTOs.AudioFiles;
 using project_music.Services.AudioFiles;
-
+using Microsoft.AspNetCore.Authorization;
 namespace project_music.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class AudioFilesController : ControllerBase
     {
         private readonly IAudioFileService _audioFileService;

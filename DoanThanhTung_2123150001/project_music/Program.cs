@@ -1,31 +1,65 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using project_music.Models;
 using project_music.Services.Artists;
 using project_music.Services.Genres;
 using project_music.Services.AudioFiles;
 using project_music.Services.Songs;
+using project_music.Services.Auth;
+using System.Text;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// ---CẤU HÌNH KẾT NỐI DATABASE ---
+// ================== CẤU HÌNH DATABASE ==================
 var connectionString = builder.Configuration.GetConnectionString("MusicAppDb");
 builder.Services.AddDbContext<MusicDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
-// --------------------------------------------------
 
-// Đăng ký Service vào DI Container
+// ================== CẤU HÌNH JWT ==================
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]!);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false; // dev localhost
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+
+        ValidateIssuer = true,
+        ValidIssuer = jwtSettings["Issuer"],
+
+        ValidateAudience = true,
+        ValidAudience = jwtSettings["Audience"],
+
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+});
+
+// ================== ĐĂNG KÝ SERVICES ==================
 builder.Services.AddScoped<IArtistService, ArtistService>();
-
-// Add services to the container.
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IGenreService, GenreService>();
 builder.Services.AddScoped<IAudioFileService, AudioFileService>();
 builder.Services.AddScoped<ISongService, SongService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+// ================== CONTROLLER + SWAGGER ==================
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// ================== PIPELINE ==================
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -34,8 +68,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseStaticFiles();   
+app.UseStaticFiles();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

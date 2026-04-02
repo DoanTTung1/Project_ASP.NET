@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace project_music.Models;
 
@@ -23,6 +24,19 @@ public partial class User
 
     public DateTime? UpdatedAt { get; set; }
 
+    [Column("role")]
+    public string? Role { get; set; }
+
+    [Column("phone_number")]
+    public string? PhoneNumber { get; set; }
+
+    [Column("zalo_id")]
+    public string? ZaloId { get; set; }
+
+    public bool IsDeleted { get; set; }
+   public string? RefreshToken { get; set; }
+    public DateTime? RefreshTokenExpiryTime { get; set; }
+
     public virtual ICollection<PlayHistory> PlayHistories { get; set; } = new List<PlayHistory>();
 
     public virtual ICollection<PlaylistCollaborator> PlaylistCollaborators { get; set; } = new List<PlaylistCollaborator>();
@@ -41,3 +55,4 @@ public partial class User
 
     public virtual ICollection<UserFollowUser> UserFollowUserFollowings { get; set; } = new List<UserFollowUser>();
 }
+

@@ -15,6 +15,8 @@ public partial class Artist
 
     public string? CoverUrl { get; set; }
 
+    public bool? IsDeleted { get; set; }
+
     public virtual ICollection<Album> Albums { get; set; } = new List<Album>();
 
     public virtual ICollection<ArtistSong> ArtistSongs { get; set; } = new List<ArtistSong>();

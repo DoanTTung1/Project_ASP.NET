@@ -7,6 +7,10 @@ namespace project_music.Services.Songs
         Task<List<SongResponse>> GetAllAsync();
         Task<SongResponse?> GetByIdAsync(string id);
         Task<SongResponse> CreateAsync(CreateSongRequest request);
-        Task<bool> DeleteAsync(string id); // Sẽ dùng Xóa mềm
+        Task<bool> DeleteAsync(string id);
+
+        Task<bool> ToggleFavoriteAsync(string userId, string songId);
+
+        Task<List<SongResponse>> GetMyFavoriteSongsAsync(string userId);
     }
 }

@@ -17,6 +17,8 @@ public partial class Album
 
     public string AlbumType { get; set; } = null!;
 
+    public bool? IsDeleted { get; set; }
+
     public virtual Artist Artist { get; set; } = null!;
 
     public virtual ICollection<Song> Songs { get; set; } = new List<Song>();

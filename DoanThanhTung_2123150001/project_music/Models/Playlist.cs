@@ -18,6 +18,7 @@ public partial class Playlist
     public bool? IsPublic { get; set; }
 
     public DateTime? CreatedAt { get; set; }
+    public bool? IsDeleted { get; set; }
 
     public virtual ICollection<PlaylistCollaborator> PlaylistCollaborators { get; set; } = new List<PlaylistCollaborator>();
 
