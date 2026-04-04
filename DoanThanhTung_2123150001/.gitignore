@@ -480,3 +480,5 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+# Bỏ qua các file nhạc do người dùng upload
+wwwroot/audios/*

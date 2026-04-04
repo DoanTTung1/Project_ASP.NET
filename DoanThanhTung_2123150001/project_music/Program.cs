@@ -7,6 +7,7 @@ using project_music.Services.Genres;
 using project_music.Services.AudioFiles;
 using project_music.Services.Songs;
 using project_music.Services.Auth;
+using project_music.Services.Playlists;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -51,6 +52,7 @@ builder.Services.AddScoped<IGenreService, GenreService>();
 builder.Services.AddScoped<IAudioFileService, AudioFileService>();
 builder.Services.AddScoped<ISongService, SongService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IPlaylistService, PlaylistService>();    
 
 // ================== CONTROLLER + SWAGGER ==================
 builder.Services.AddControllers();
