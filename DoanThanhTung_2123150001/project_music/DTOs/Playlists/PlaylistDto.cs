@@ -21,9 +21,15 @@ namespace project_music.DTOs.Playlists
         public string CreatorName { get; set; } = null!;
 
         public DateTime? CreatedAt { get; set; }
-public string? CoverUrl { get; set; }
+        public string? CoverUrl { get; set; }
         public int TotalSongs { get; set; }
 
+
+    }
+    public class AddSongRequest
+    {
+        [Required(ErrorMessage = "Vui lòng chọn bài hát")]
+        public string SongId { get; set; } = null!;
 
     }
 

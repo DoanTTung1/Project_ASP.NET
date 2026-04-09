@@ -59,5 +59,28 @@ namespace project_music.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpPost("{id}/songs")]
+        public async Task<IActionResult> AddSongToPlaylist(string id, [FromBody] AddSongRequest request)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userId))
+                    return Unauthorized(new { message = "Bạn chưa đăng nhập." });
+
+               
+                await _playlistService.AddSongToPlaylistAsync(userId, id, request.SongId);
+
+                return Ok(new { message = "Đã thêm bài hát vào Playlist thành công!" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
     }
 }

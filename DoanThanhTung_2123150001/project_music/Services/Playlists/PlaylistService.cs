@@ -4,7 +4,7 @@ using project_music.Models;
 
 namespace project_music.Services.Playlists
 {
-    
+
     public class PlaylistService : IPlaylistService
     {
         private readonly MusicDbContext _context;
@@ -13,7 +13,7 @@ namespace project_music.Services.Playlists
             _context = context;
         }
 
-    
+
         public async Task<PlaylistResponse> CreatePlaylistAsync(string userId, CreatePlaylistRequest request)
         {
             var newPlaylist = new Playlist
@@ -63,9 +63,45 @@ namespace project_music.Services.Playlists
                     TotalSongs = p.PlaylistSongs.Count()
                 })
                 .OrderByDescending(p => p.CreatedAt)
-                .ToListAsync(); 
+                .ToListAsync();
 
             return playlists;
+        }
+
+
+
+        public async Task<bool> AddSongToPlaylistAsync(string userId, string playlistId, string songId)
+        {
+            var playlist = await _context.Playlists.FindAsync(playlistId);
+            if (playlist == null || playlist.IsDeleted == true)
+
+                throw new Exception("Playlist không tồn tại hoặc đã bị xóa");
+
+            if (playlist.UserId != userId)
+
+                throw new Exception("Bạn không có quyền thêm bài hát vào playlist này");
+
+            var song = await _context.Songs.FindAsync(songId);
+            if (song == null || song.IsDeleted == true)
+
+                throw new Exception("Bài hát không tồn tại hoặc đã bị xóa");
+
+            var exits = await _context.PlaylistSongs.AnyAsync(ps => ps.PlaylistId == playlistId && ps.SongId == songId);
+            if (exits) throw new Exception("Bài hát này đã có sẵn trong Playlist");
+            int maxPosition = await _context.PlaylistSongs
+                .Where(ps => ps.PlaylistId == playlistId)
+                .Select(ps => (int?)ps.PositionOrder)
+                .MaxAsync() ?? 0;
+
+            var playlistSong = new PlaylistSong
+            {
+                PlaylistId = playlistId,
+                SongId = songId,
+                PositionOrder = maxPosition + 1
+            };
+            _context.PlaylistSongs.Add(playlistSong);
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }

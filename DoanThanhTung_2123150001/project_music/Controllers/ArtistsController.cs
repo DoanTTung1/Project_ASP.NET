@@ -42,21 +42,21 @@ namespace project_music.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateArtistRequest request)
         {
-            // ModelState tự động kiểm tra các điều kiện [Required], [MaxLength] trong DTO
+            
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState); // 400 Bad Request nếu đầu vào sai
+                return BadRequest(ModelState); 
             }
 
             try
             {
                 var createdArtist = await _artistService.CreateArtistAsync(request);
-                return CreatedAtAction(nameof(GetById), new { id = createdArtist.ArtistId }, createdArtist); // 201 Created
+                return CreatedAtAction(nameof(GetById), new { id = createdArtist.ArtistId }, createdArtist); 
             }
             catch (Exception ex)
             {
-                // Bắt lỗi nghiệp vụ từ Service (ví dụ: Trùng tên)
-                return BadRequest(new { message = ex.Message }); // 400 Bad Request
+               
+                return BadRequest(new { message = ex.Message }); 
             }
         }
     }
