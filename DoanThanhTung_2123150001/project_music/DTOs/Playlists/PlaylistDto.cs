@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using project_music.DTOs.Songs;
+using System.ComponentModel.DataAnnotations;
 
 namespace project_music.DTOs.Playlists
 {
@@ -31,6 +32,12 @@ namespace project_music.DTOs.Playlists
         [Required(ErrorMessage = "Vui lòng chọn bài hát")]
         public string SongId { get; set; } = null!;
 
+    }
+
+    public class PlaylistDetailResponse : PlaylistResponse
+    {
+        // Chứa danh sách các bài hát nằm trong Playlist này
+        public List<SongResponse> Songs { get; set; } = new List<SongResponse>();
     }
 
 }

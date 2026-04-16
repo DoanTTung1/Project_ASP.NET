@@ -24,6 +24,10 @@ namespace project_music.DTOs.Songs
         public long? TotalPlays { get; set; }
         public string? AlbumId { get; set; }
 
+        public string? CoverUrl { get; set; }
+
+        public string? FileUrl { get; set; }
+
         // ĐIỂM MẤU CHỐT: Thêm một danh sách các file nhạc vào đây
         public List<SongAudioFileResponse> AudioFiles { get; set; } = new List<SongAudioFileResponse>();
         public List<SongArtistResponse> Artists { get; set; }= new List<SongArtistResponse>();

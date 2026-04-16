@@ -2,12 +2,20 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using project_music.Models;
+using project_music.Services.Admin;
 using project_music.Services.Artists;
-using project_music.Services.Genres;
 using project_music.Services.AudioFiles;
-using project_music.Services.Songs;
 using project_music.Services.Auth;
+using project_music.Services.Downloads;
+using project_music.Services.Genres;
+using project_music.Services.History;
+using project_music.Services.Home;
+using project_music.Services.Lyrics;
 using project_music.Services.Playlists;
+using project_music.Services.Search;
+using project_music.Services.Social;
+using project_music.Services.Songs;
+using project_music.Services.Subscriptions;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -46,13 +54,35 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+// --- 1. MỚI THÊM: CẤU HÌNH CORS CHO WEB FRONTEND ---
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowWebFrontend", policy =>
+    {
+        // Cho phép các port phổ biến của React (3000) và Vite/Vue (5173) gọi API
+        policy.WithOrigins("http://localhost:3000", "http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); // Bắt buộc phải có để gửi kèm Token/Cookie
+    });
+});
+// ----------------------------------------------------
+
 // ================== ĐĂNG KÝ SERVICES ==================
 builder.Services.AddScoped<IArtistService, ArtistService>();
 builder.Services.AddScoped<IGenreService, GenreService>();
 builder.Services.AddScoped<IAudioFileService, AudioFileService>();
 builder.Services.AddScoped<ISongService, SongService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IPlaylistService, PlaylistService>();    
+builder.Services.AddScoped<IPlaylistService, PlaylistService>();
+builder.Services.AddScoped<IHistoryService, HistoryService>();
+builder.Services.AddScoped<ISocialService, SocialService>();
+builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+builder.Services.AddScoped<ISearchService, SearchService>();
+builder.Services.AddScoped<ILyricService, LyricService>();
+builder.Services.AddScoped<IDownloadService, DownloadService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
+builder.Services.AddScoped<IHomeService, HomeService>();
 
 // ================== CONTROLLER + SWAGGER ==================
 builder.Services.AddControllers();
@@ -71,6 +101,11 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseStaticFiles();
+
+// --- 2. MỚI THÊM: MỞ CỬA CORS ---
+// Lưu ý: Phải đặt UseCors TRƯỚC UseAuthentication và UseAuthorization
+app.UseCors("AllowWebFrontend");
+// --------------------------------
 
 app.UseAuthentication();
 app.UseAuthorization();

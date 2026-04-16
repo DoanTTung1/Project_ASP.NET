@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using project_music.DTOs.Artists;
+using project_music.DTOs.Songs;
 using project_music.Models;
 
 namespace project_music.Services.Artists
@@ -28,17 +29,39 @@ namespace project_music.Services.Artists
 
         public async Task<ArtistResponse?> GetArtistByIdAsync(string artistId)
         {
-            var artist = await _context.Artists.FindAsync(artistId);
-            if (artist == null) return null;
+            var artist = await _context.Artists
+                .Where(a => a.ArtistId == artistId)
+                // Đừng dùng FindAsync nữa, dùng Select để join các bảng lấy bài hát
+                .Select(a => new ArtistResponse
+                {
+                    ArtistId = a.ArtistId,
+                    Name = a.Name,
+                    Bio = a.Bio,
+                    AvatarUrl = a.AvatarUrl,
+                    CoverUrl = a.CoverUrl,
 
-            return new ArtistResponse
-            {
-                ArtistId = artist.ArtistId,
-                Name = artist.Name,
-                Bio = artist.Bio,
-                AvatarUrl = artist.AvatarUrl,
-                CoverUrl = artist.CoverUrl
-            };
+                    // 👉 KHÚC QUAN TRỌNG NHẤT: LÔI BÀI HÁT CỦA CA SĨ NÀY RA
+                    Songs = a.ArtistSongs
+                        .Where(ast => ast.Song.IsDeleted == false)
+                        .Select(ast => new SongResponse
+                        {
+                            SongId = ast.Song.SongId,
+                            Title = ast.Song.Title,
+                            DurationSeconds = ast.Song.DurationSeconds,
+                            // Lấy ảnh bìa từ Album
+                            CoverUrl = ast.Song.Album != null ? ast.Song.Album.CoverUrl : null,
+                            // Lấy link nhạc y chang như trang Yêu Thích
+                            FileUrl = _context.AudioFiles.Where(af => af.SongId == ast.Song.SongId).Select(af => af.FileUrl).FirstOrDefault(),
+                            // Lấy danh sách ca sĩ hát chung
+                            Artists = ast.Song.ArtistSongs.Select(x => new SongArtistResponse
+                            {
+                                ArtistId = x.ArtistId,
+                                Name = x.Artist.Name
+                            }).ToList()
+                        }).ToList()
+                }).FirstOrDefaultAsync();
+
+            return artist;
         }
 
         public async Task<ArtistResponse> CreateArtistAsync(CreateArtistRequest request)

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using project_music.DTOs.Songs;
+using System.ComponentModel.DataAnnotations;
 
 namespace project_music.DTOs.Artists
 {
@@ -9,6 +10,8 @@ namespace project_music.DTOs.Artists
         public string? Bio { get; set; }
         public string? AvatarUrl { get; set; }
         public string? CoverUrl { get; set; }
+
+        public List<SongResponse> Songs { get; set; } 
     }
     public class CreateArtistRequest
     {

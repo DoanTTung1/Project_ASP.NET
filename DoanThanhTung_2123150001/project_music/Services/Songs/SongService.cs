@@ -156,13 +156,16 @@ namespace project_music.Services.Songs
                     ReleaseDate = f.Song.ReleaseDate,
                     TotalPlays = f.Song.TotalPlays,
                     AlbumId = f.Song.AlbumId,
+
+                    
+                    FileUrl = f.Song.AudioFiles.Select(a => a.FileUrl).FirstOrDefault(),
+
                     AudioFiles = f.Song.AudioFiles.Select(a => new SongAudioFileResponse
                     {
                         FileId = a.FileId,
                         Quality = a.Quality,
                         FileUrl = a.FileUrl,
                         SizeBytes = a.SizeBytes
-
                     }).ToList(),
 
                     Artists = f.Song.ArtistSongs.Select(ast => new SongArtistResponse
