@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace project_music.Models;
 
@@ -15,9 +16,14 @@ public partial class Song
 
     public DateOnly? ReleaseDate { get; set; }
 
+    [Column("cover_url")]
+    public string? CoverUrl { get; set; }
     public long? TotalPlays { get; set; }
 
     public bool? IsDeleted { get; set; }
+
+    [Column("IsVip", TypeName = "bit")]
+    public bool IsVip { get; set; } = false;
 
     public virtual Album? Album { get; set; }
 

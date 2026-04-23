@@ -7,7 +7,9 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
-using System.Security.Cryptography; 
+using System.Security.Cryptography;
+using SendGrid;
+using SendGrid.Helpers.Mail;
 
 namespace project_music.Services.Auth
 {
@@ -22,7 +24,7 @@ namespace project_music.Services.Auth
             _config = config;
         }
 
-        // --- HÀM MỚI: TẠO REFRESH TOKEN NGẪU NHIÊN ---
+        // --- HÀM TẠO REFRESH TOKEN ---
         private string GenerateRefreshToken()
         {
             var randomNumber = new byte[32];
@@ -49,7 +51,7 @@ namespace project_music.Services.Auth
                 PhoneNumber = request.phoneNumber,
                 IsPremium = false,
                 Role = "User",
-                IsDeleted = false // Set mặc định chưa xóa
+                IsDeleted = false
             };
 
             _context.Users.Add(newUser);
@@ -61,27 +63,80 @@ namespace project_music.Services.Auth
                 Email = newUser.Email,
                 Username = newUser.Username,
                 PhoneNumber = newUser.PhoneNumber,
-                Role = newUser.Role
+                Role = newUser.Role,
+                IsPremium = newUser.IsPremium ?? false // 👉 Truyền biến
             };
         }
 
         public async Task<AuthResponse> LoginAsync(LoginRequest request)
         {
-            // Thêm điều kiện IsDeleted == false (Không cho nick bị xóa đăng nhập)
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == request.Email.ToLower() && u.IsDeleted == false);
             if (user == null) throw new Exception("Tài khoản hoặc mật khẩu không chính xác.");
 
             bool isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
             if (!isPasswordValid) throw new Exception("Tài khoản hoặc mật khẩu không chính xác.");
 
-            // TẠO REFRESH TOKEN VÀ LƯU VÀO DB
             var refreshToken = GenerateRefreshToken();
             user.RefreshToken = refreshToken;
-            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(30); // Cho sống 30 ngày
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(30);
             await _context.SaveChangesAsync();
 
-            // Gọi hàm đóng gói Token ở dưới cùng
             return CreateAuthResponse(user, refreshToken);
+        }
+        // --- HÀM TẠO MẬT KHẨU NGẪU NHIÊN 8 KÝ TỰ ---
+        private string GenerateRandomPassword(int length = 8)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%";
+            var random = new Random();
+            return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+
+        // --- HÀM XỬ LÝ QUÊN MẬT KHẨU ---
+        public async Task<bool> ForgotPasswordAsync(string email)
+        {
+            // 1. Kiểm tra xem Email có tồn tại trong hệ thống không
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower() && u.IsDeleted == false);
+            if (user == null)
+            {
+                throw new Exception("Không tìm thấy tài khoản nào đăng ký bằng Email này.");
+            }
+
+            // 2. Tạo mật khẩu mới và mã hóa nó
+            string newPassword = GenerateRandomPassword(8);
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            await _context.SaveChangesAsync(); // Lưu ngay vào Database
+
+            // 3. Gửi Email chứa mật khẩu mới qua SendGrid
+            var apiKey = "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"; // Key của Boss (Nhớ đổi sau nhé)
+            var client = new SendGridClient(apiKey);
+
+            var from = new EmailAddress("photonics.xray02558@gmail.com", "Âm Vang Music");
+            var subject = "Yêu cầu cấp lại mật khẩu - Âm Vang Music";
+            var to = new EmailAddress(user.Email, user.Username);
+
+            var plainTextContent = $"Chào {user.Username}, Mật khẩu mới của bạn là: {newPassword}. Vui lòng đăng nhập và đổi mật khẩu ngay.";
+            var htmlContent = $@"
+                <div style='font-family: Arial, sans-serif; background-color: #050505; color: #ffffff; padding: 30px; border-radius: 10px;'>
+                    <h2 style='color: #dc2626;'>Âm Vang Music</h2>
+                    <p>Chào <strong>{user.Username}</strong>,</p>
+                    <p>Hệ thống đã nhận được yêu cầu cấp lại mật khẩu của bạn. Đây là mật khẩu mới để bạn đăng nhập:</p>
+                    <div style='background-color: #1f2937; padding: 15px; font-size: 24px; font-weight: bold; letter-spacing: 2px; text-align: center; border-radius: 5px; color: #fbbf24; margin: 20px 0;'>
+                        {newPassword}
+                    </div>
+                    <p style='color: #9ca3af; font-size: 12px;'><i>Lưu ý: Vì lý do bảo mật, vui lòng đổi mật khẩu ngay sau khi đăng nhập thành công.</i></p>
+                </div>";
+
+            var msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
+            var response = await client.SendEmailAsync(msg);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                // Nếu gửi mail xịt (do Key lỗi, rớt mạng...), báo lỗi cho Frontend
+                throw new Exception("Lỗi hệ thống khi gửi Email. Vui lòng thử lại sau.");
+            }
+
+            return true;
         }
 
         public async Task<AuthResponse> LoginWithZaloAsync(ZaloLoginRequest request)
@@ -128,29 +183,23 @@ namespace project_music.Services.Auth
                 throw new Exception("Tài khoản này đã bị khóa hoặc xóa.");
             }
 
-            // TẠO REFRESH TOKEN VÀ LƯU VÀO DB
             var refreshToken = GenerateRefreshToken();
             user.RefreshToken = refreshToken;
             user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(30);
             await _context.SaveChangesAsync();
 
-            // Gọi hàm đóng gói Token
             return CreateAuthResponse(user, refreshToken);
         }
 
-        // --- HÀM MỚI: XIN CẤP LẠI TOKEN ---
         public async Task<AuthResponse> RefreshTokenAsync(RefreshTokenRequest request)
         {
-            // Tìm User có cái RefreshToken này
             var user = await _context.Users.FirstOrDefaultAsync(u => u.RefreshToken == request.RefreshToken && u.IsDeleted == false);
 
-            // Kiểm tra xem mã có tồn tại và còn hạn không
             if (user == null || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
             {
                 throw new Exception("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
             }
 
-            // Sinh mã Refresh Token mới để xoay vòng bảo mật
             var newRefreshToken = GenerateRefreshToken();
             user.RefreshToken = newRefreshToken;
             user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(30);
@@ -159,7 +208,7 @@ namespace project_music.Services.Auth
             return CreateAuthResponse(user, newRefreshToken);
         }
 
-        // --- HÀM GỘP: CHUYÊN ĐÓNG GÓI TOKEN (Giúp code không bị lặp lại) ---
+        // --- HÀM GỘP: CHUYÊN ĐÓNG GÓI TOKEN ---
         private AuthResponse CreateAuthResponse(User user, string refreshToken)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -184,14 +233,15 @@ namespace project_music.Services.Auth
             return new AuthResponse
             {
                 Token = tokenHandler.WriteToken(token),
-                RefreshToken = refreshToken, // <--- Trả về Refresh Token cho FE
+                RefreshToken = refreshToken,
                 User = new RegisterResponse
                 {
                     UserId = user.UserId,
                     Username = user.Username,
                     Email = user.Email,
                     PhoneNumber = user.PhoneNumber ?? "",
-                    Role = user.Role ?? "User"
+                    Role = user.Role ?? "User",
+                    IsPremium = user.IsPremium ?? false 
                 }
             };
         }

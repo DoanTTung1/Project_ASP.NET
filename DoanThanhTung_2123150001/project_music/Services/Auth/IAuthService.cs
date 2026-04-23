@@ -11,5 +11,6 @@ namespace project_music.Services.Auth
         Task<AuthResponse> LoginWithZaloAsync(ZaloLoginRequest request);
 
         Task<AuthResponse> RefreshTokenAsync(RefreshTokenRequest request);
+        Task<bool> ForgotPasswordAsync(string email);
     }
 }

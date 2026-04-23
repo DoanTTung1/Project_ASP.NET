@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace project_music.Models;
 
@@ -19,6 +20,11 @@ public partial class Playlist
 
     public DateTime? CreatedAt { get; set; }
     public bool? IsDeleted { get; set; }
+    [Column("IsSystemPlaylist", TypeName = "bit")]
+    public bool IsSystemPlaylist { get; set; } = false; // Báo hiệu Playlist của Admin/Hệ thống
+
+    [Column("IsVipOnly", TypeName = "bit")]
+    public bool IsVipOnly { get; set; } = false;
 
     public virtual ICollection<PlaylistCollaborator> PlaylistCollaborators { get; set; } = new List<PlaylistCollaborator>();
 

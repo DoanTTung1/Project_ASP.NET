@@ -12,5 +12,7 @@ namespace project_music.Services.Songs
         Task<bool> ToggleFavoriteAsync(string userId, string songId);
 
         Task<List<SongResponse>> GetMyFavoriteSongsAsync(string userId);
+
+        Task<SongResponse> UpdateAsync(string id, UpdateSongRequest request);
     }
 }

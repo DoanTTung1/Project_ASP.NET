@@ -31,5 +31,6 @@ namespace project_music.DTOs.Subscriptions
         public string PaymentGateway { get; set; } = null!;
         public string Status { get; set; } = null!;
         public DateTime? PaidAt { get; set; }
+        public string? PayUrl { get; set; }
     }
 }

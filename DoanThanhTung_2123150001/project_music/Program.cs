@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using project_music.Models;
 using project_music.Services.Admin;
+using project_music.Services.AI;
 using project_music.Services.Artists;
 using project_music.Services.AudioFiles;
 using project_music.Services.Auth;
@@ -23,7 +24,8 @@ var builder = WebApplication.CreateBuilder(args);
 // ================== CẤU HÌNH DATABASE ==================
 var connectionString = builder.Configuration.GetConnectionString("MusicAppDb");
 builder.Services.AddDbContext<MusicDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+   options.UseMySql(connectionString,
+    new MySqlServerVersion(new Version(8, 0, 32))));
 
 // ================== CẤU HÌNH JWT ==================
 var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -60,10 +62,9 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowWebFrontend", policy =>
     {
         // Cho phép các port phổ biến của React (3000) và Vite/Vue (5173) gọi API
-        policy.WithOrigins("http://localhost:3000", "http://localhost:5173")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials(); // Bắt buộc phải có để gửi kèm Token/Cookie
+        policy.AllowAnyOrigin()
+  .AllowAnyHeader()
+  .AllowAnyMethod();
     });
 });
 // ----------------------------------------------------
@@ -83,9 +84,11 @@ builder.Services.AddScoped<ILyricService, LyricService>();
 builder.Services.AddScoped<IDownloadService, DownloadService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IHomeService, HomeService>();
+builder.Services.AddHttpClient<IAiService, AiService>();
 
 // ================== CONTROLLER + SWAGGER ==================
 builder.Services.AddControllers();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -100,7 +103,15 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseStaticFiles();
+// Thay thế app.UseStaticFiles(); bằng đoạn này:
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        ctx.Context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+        ctx.Context.Response.Headers.Append("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    }
+});
 
 // --- 2. MỚI THÊM: MỞ CỬA CORS ---
 // Lưu ý: Phải đặt UseCors TRƯỚC UseAuthentication và UseAuthorization

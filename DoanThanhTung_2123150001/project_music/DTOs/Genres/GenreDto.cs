@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using project_music.DTOs.Songs;
+using System.ComponentModel.DataAnnotations;
 
 namespace project_music.DTOs.Genres
 {
@@ -8,6 +9,7 @@ namespace project_music.DTOs.Genres
         public int GenreId { get; set; }
         public string Name { get; set; } = null!;
         public string? ImageUrl { get; set; }
+        public List<SongResponse> Songs { get; set; }
     }
 
     // 2. Dữ liệu nhận vào khi Thêm mới (POST)
@@ -17,7 +19,7 @@ namespace project_music.DTOs.Genres
         [MaxLength(50, ErrorMessage = "Tên thể loại không vượt quá 50 ký tự")]
         public string Name { get; set; } = null!;
 
-        public string? ImageUrl { get; set; }
+        public IFormFile? ImageFile { get; set; }
     }
 
     // 3. Dữ liệu nhận vào khi Cập nhật (PUT)
@@ -27,6 +29,6 @@ namespace project_music.DTOs.Genres
         [MaxLength(50, ErrorMessage = "Tên thể loại không vượt quá 50 ký tự")]
         public string Name { get; set; } = null!;
 
-        public string? ImageUrl { get; set; }
+        public IFormFile? ImageFile { get; set; }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using project_music.DTOs.Songs;
 using System.ComponentModel.DataAnnotations;
-
+using Microsoft.AspNetCore.Http;
 namespace project_music.DTOs.Playlists
 {
     public class CreatePlaylistRequest
@@ -11,10 +11,16 @@ namespace project_music.DTOs.Playlists
 
         public string? Description { get; set; }
         public bool IsPublic { get; set; } = true;
+        public bool IsSystemPlaylist { get; set; } = false;
+        public bool IsVipOnly { get; set; } = false;
+        public IFormFile? CoverFile { get; set; }
+
     }
     public class PlaylistResponse
     {
         public string PlaylistId { get; set; } = null!;
+        public bool IsSystemPlaylist { get; set; }
+        public bool IsVipOnly { get; set; }
         public string UserId { get; set; } = null!;
         public string Name { get; set; } = null!;
         public string? Description { get; set; }
@@ -38,6 +44,7 @@ namespace project_music.DTOs.Playlists
     {
         // Chứa danh sách các bài hát nằm trong Playlist này
         public List<SongResponse> Songs { get; set; } = new List<SongResponse>();
+        public bool HasFullAccess { get; set; } = true;
     }
 
 }

@@ -9,35 +9,41 @@ namespace project_music.DTOs.Songs
         public string FileUrl { get; set; } = null!;
         public long SizeBytes { get; set; }
     }
+
     public class SongArtistResponse
     {
         public string ArtistId { get; set; } = null!;
         public string Name { get; set; } = null!;
         public string Role { get; set; } = null!;
     }
+
     public class SongResponse
     {
+        public bool IsVip { get; set; }
+        public bool HasFullAccess { get; set; } = true;
+        public string? Lyrics { get; set; }
         public string SongId { get; set; } = null!;
         public string Title { get; set; } = null!;
         public int DurationSeconds { get; set; }
         public DateOnly? ReleaseDate { get; set; }
         public long? TotalPlays { get; set; }
         public string? AlbumId { get; set; }
-
+        public List<string> Genres { get; set; } = new List<string>();
         public string? CoverUrl { get; set; }
-
         public string? FileUrl { get; set; }
 
         // ĐIỂM MẤU CHỐT: Thêm một danh sách các file nhạc vào đây
         public List<SongAudioFileResponse> AudioFiles { get; set; } = new List<SongAudioFileResponse>();
-        public List<SongArtistResponse> Artists { get; set; }= new List<SongArtistResponse>();
+        public List<SongArtistResponse> Artists { get; set; } = new List<SongArtistResponse>();
     }
+
     public class SongArtistRequest
     {
-        [Required(ErrorMessage ="Mã ca sĩ không được để trống")]
+        [Required(ErrorMessage = "Mã ca sĩ không được để trống")]
         public string ArtistId { get; set; } = null!;
         public string Role { get; set; } = "MAIN";
     }
+
     public class CreateSongRequest
     {
         [Required(ErrorMessage = "Tên bài hát không được để trống")]
@@ -48,9 +54,28 @@ namespace project_music.DTOs.Songs
         [Range(1, 3600, ErrorMessage = "Thời lượng phải từ 1 đến 3600 giây")]
         public int DurationSeconds { get; set; }
 
+        public List<int> GenreIds { get; set; } = new List<int>();
         public DateOnly? ReleaseDate { get; set; }
         public string? AlbumId { get; set; }
+
         [Required(ErrorMessage = "Phải có ít nhất một ca sĩ cho bài hát")]
         public List<SongArtistRequest> Artists { get; set; } = new List<SongArtistRequest>();
+        public string? Lyrics { get; set; }
+
+        // 👉 ĐÃ THÊM: Để Frontend gửi lệnh tạo bài hát VIP
+        public bool IsVip { get; set; } = false;
+    }
+
+    public class UpdateSongRequest
+    {
+        public string Title { get; set; } = null!;
+        public int DurationSeconds { get; set; }
+        public DateTime? ReleaseDate { get; set; }
+        public List<int> GenreIds { get; set; } = new List<int>();
+        public string? Lyrics { get; set; }
+        public List<string> ArtistIds { get; set; } = new List<string>();
+
+        // 👉 ĐÃ THÊM: Để Frontend gửi lệnh cập nhật trạng thái VIP
+        public bool IsVip { get; set; }
     }
 }

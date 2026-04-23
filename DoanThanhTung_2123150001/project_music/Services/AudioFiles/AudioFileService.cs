@@ -14,6 +14,45 @@ namespace project_music.Services.AudioFiles
             _context = context;
             _env = env;
         }
+       
+        public async Task<string> SaveCoverAsync(string songId, IFormFile file)
+        {
+            // 1. Kiểm tra bài hát
+            var song = await _context.Songs.FindAsync(songId);
+            if (song == null) throw new Exception("Không tìm thấy bài hát để cập nhật ảnh.");
+
+            // 2. Kiểm tra định dạng ảnh
+            var extension = Path.GetExtension(file.FileName).ToLower();
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+            if (!allowedExtensions.Contains(extension))
+                throw new Exception("Hệ thống chỉ hỗ trợ file ảnh định dạng: .jpg, .png, .webp");
+
+            // Giới hạn dung lượng ảnh (Tối đa 5MB)
+            if (file.Length > 5 * 1024 * 1024)
+                throw new Exception("Ảnh quá lớn. Tối đa 5MB.");
+
+            // 3. Tạo thư mục wwwroot/covers nếu chưa có
+            var webRootPath = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            var coversFolder = Path.Combine(webRootPath, "covers");
+            if (!Directory.Exists(coversFolder)) Directory.CreateDirectory(coversFolder);
+
+            // 4. Lưu file ảnh (Dùng GUID để không bị trùng tên/lỗi cache)
+            var uniqueFileName = $"cover_{Guid.NewGuid()}{extension}";
+            var filePath = Path.Combine(coversFolder, uniqueFileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            // 5. Cập nhật đường dẫn ảnh vào Database
+            var coverUrl = $"/covers/{uniqueFileName}";
+            song.CoverUrl = coverUrl;
+            await _context.SaveChangesAsync(); // Cập nhật lại cột CoverUrl của bảng Song
+
+            // Trả về link ảnh mới để Frontend hiển thị
+            return coverUrl;
+        }
 
         public async Task<AudioFileResponse> UploadAsync(UploadAudioRequest request)
         {

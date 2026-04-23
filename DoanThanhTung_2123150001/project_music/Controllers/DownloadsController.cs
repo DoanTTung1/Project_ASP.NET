@@ -21,6 +21,12 @@ namespace project_music.Controllers
         [HttpPost("request-download")]
         public async Task<IActionResult> RequestDownload([FromBody] DownloadRequest request)
         {
+            // Kiểm tra xem dữ liệu gửi lên có bị thiếu ID bài hát không
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new { message = "Dữ liệu yêu cầu tải xuống không hợp lệ." });
+            }
+
             try
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -29,8 +35,14 @@ namespace project_music.Controllers
             }
             catch (Exception ex)
             {
-                // Nếu báo lỗi (Ví dụ: Không phải VIP) thì ném lỗi 403 Forbidden cho Front-end biết
-                return StatusCode(403, new { message = ex.Message });
+                // Nếu lỗi do cố tình tải nhạc VIP -> Báo 403 Forbidden
+                if (ex.Message.Contains("Premium") || ex.Message.Contains("Độc Quyền"))
+                {
+                    return StatusCode(403, new { message = ex.Message });
+                }
+
+                // Các lỗi khác -> Báo 400 kèm message chuẩn
+                return BadRequest(new { message = ex.Message });
             }
         }
     }

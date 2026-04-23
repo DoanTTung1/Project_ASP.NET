@@ -15,6 +15,9 @@
         public string Title { get; set; } = null!;
         public string? ArtistName { get; set; } // Tên ca sĩ hát chính
         public string? CoverUrl { get; set; } // Lấy từ Album nếu có
+        public int DurationSeconds { get; set; }
+        public string? FileUrl { get; set; }
+        public bool IsVip { get; set; }
     }
 
     public class SearchArtistResponse

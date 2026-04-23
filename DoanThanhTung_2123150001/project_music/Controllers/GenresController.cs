@@ -29,7 +29,7 @@ namespace project_music.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateGenreRequest request)
+        public async Task<IActionResult> Create([FromForm] CreateGenreRequest request)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -45,7 +45,7 @@ namespace project_music.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] UpdateGenreRequest request)
+        public async Task<IActionResult> Update(int id, [FromForm] UpdateGenreRequest request)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 

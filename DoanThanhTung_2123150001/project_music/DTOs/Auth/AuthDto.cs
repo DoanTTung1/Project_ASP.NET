@@ -32,6 +32,7 @@ namespace project_music.DTOs.Auth
         public string Username { get; set; } = null!;
         public string PhoneNumber { get; set; } = null!;
         public string Role { get; set; } = null!;
+        public bool IsPremium { get; set; }
     }
 
     // 1. THÊM CLASS NÀY CHO API LOGIN BÌNH THƯỜNG
@@ -68,5 +69,20 @@ namespace project_music.DTOs.Auth
         [Required (ErrorMessage = "Access token không được để trống.")]
         public string Token { get; set; } = null!;
 
+    }
+    public class ForgotPasswordRequest
+    {
+        public string Email { get; set; } = null!;
+    }
+    public class ChangePasswordRequest
+    {
+        [Required(ErrorMessage = "Vui lòng nhập mật khẩu hiện tại.")]
+        public string CurrentPassword { get; set; } = null!;
+
+        [Required(ErrorMessage = "Vui lòng nhập mật khẩu mới.")]
+        [MinLength(8, ErrorMessage = "Độ dài tối thiểu là 8 ký tự")]
+        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$",
+            ErrorMessage = "Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường, 1 số và 1 ký tự đặc biệt (@$!%*?&)")]
+        public string NewPassword { get; set; } = null!;
     }
 }

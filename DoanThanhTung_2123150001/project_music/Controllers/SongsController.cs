@@ -1,35 +1,42 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using project_music.DTOs.Songs;
+using project_music.Services.AudioFiles;
 using project_music.Services.Songs;
 using System.Security.Claims;
+
 namespace project_music.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    // 👉 ĐÃ XÓA [Authorize(Roles = "Admin")] Ở ĐÂY ĐỂ MỞ CỬA CHO MỌI NGƯỜI
     public class SongsController : ControllerBase
     {
         private readonly ISongService _songService;
+        private readonly IAudioFileService _audioFileService;
 
-        public SongsController(ISongService songService)
+        public SongsController(ISongService songService, IAudioFileService audioFileService)
         {
             _songService = songService;
+            _audioFileService = audioFileService;
         }
 
+        // --- KHU VỰC KHÁCH VÃNG LAI (Không cần đăng nhập) ---
+
         [HttpGet]
-        [AllowAnonymous]
         public async Task<IActionResult> GetAll() => Ok(await _songService.GetAllAsync());
 
         [HttpGet("{id}")]
-        [AllowAnonymous]
         public async Task<IActionResult> GetById(string id)
         {
             var result = await _songService.GetByIdAsync(id);
             return result == null ? NotFound(new { message = "Không tìm thấy bài hát." }) : Ok(result);
         }
 
+        // --- KHU VỰC ADMIN (Chỉ Admin mới được Thêm/Sửa/Xóa) ---
+
         [HttpPost]
+        [Authorize(Roles = "Admin")] // 👉 ĐEM XUỐNG ĐÂY
         public async Task<IActionResult> Create([FromBody] CreateSongRequest request)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -40,32 +47,47 @@ namespace project_music.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new {message =ex.Message});
+                return BadRequest(new { message = ex.Message });
             }
         }
 
+        [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")] // 👉 VÀ ĐÂY
+        public async Task<IActionResult> Update(string id, [FromBody] UpdateSongRequest request)
+        {
+            var result = await _songService.UpdateAsync(id, request);
+            return Ok(result);
+        }
+
         [HttpDelete("{id}")]
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "Admin")] // 👉 VÀ ĐÂY
         public async Task<IActionResult> Delete(string id)
         {
             var deleted = await _songService.DeleteAsync(id);
             return deleted ? Ok(new { message = "Xóa bài hát thành công (Xóa mềm)." }) : NotFound(new { message = "Không tìm thấy." });
         }
 
-        // --- API THẢ TIM BÀI HÁT ---
+        [HttpPost("{id}/upload-cover")]
+        [Authorize(Roles = "Admin")] // 👉 VÀ ĐÂY
+        public async Task<IActionResult> UploadCover(string id, IFormFile file)
+        {
+            var url = await _audioFileService.SaveCoverAsync(id, file);
+            return Ok(new { coverUrl = url });
+        }
+
+
+        // --- KHU VỰC USER THƯỜNG (Chỉ cần đăng nhập) ---
+
         [HttpPost("{id}/favorite")]
-        [Authorize] 
+        [Authorize] // 👉 Tài khoản thường (User) cũng được Thả tim
         public async Task<IActionResult> ToggleFavorite(string id)
         {
             try
             {
-                
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
                 if (string.IsNullOrEmpty(userId))
                     return Unauthorized(new { message = "Bạn chưa đăng nhập." });
 
-                
                 var isLiked = await _songService.ToggleFavoriteAsync(userId, id);
 
                 if (isLiked)
@@ -79,22 +101,18 @@ namespace project_music.Controllers
             }
         }
 
-
-        // --- API XEM DANH SÁCH YÊU THÍCH ---
         [HttpGet("my-favorites")]
-        [Authorize]
+        [Authorize] // 👉 Tài khoản thường được xem danh sách tim của mình
         public async Task<IActionResult> GetMyFavorites()
         {
             try
             {
-                
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
                 if (string.IsNullOrEmpty(userId))
                     return Unauthorized(new { message = "Bạn chưa đăng nhập." });
 
                 var result = await _songService.GetMyFavoriteSongsAsync(userId);
-                return Ok(result); 
+                return Ok(result);
             }
             catch (Exception ex)
             {

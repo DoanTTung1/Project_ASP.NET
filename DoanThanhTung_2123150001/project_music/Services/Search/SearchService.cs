@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using project_music.DTOs.Search;
+using project_music.DTOs.Songs; // Nhớ thêm using này để dùng SongArtistResponse
 using project_music.Models;
 
 namespace project_music.Services.Search
@@ -17,10 +18,9 @@ namespace project_music.Services.Search
         {
             if (string.IsNullOrWhiteSpace(keyword))
             {
-                return new SearchResponse(); // Nếu không nhập gì thì trả về rỗng luôn
+                return new SearchResponse();
             }
 
-            // Chuyển từ khóa về chữ thường để tìm kiếm không phân biệt hoa thường
             var lowerKeyword = keyword.ToLower();
 
             // 1. Tìm Bài hát (Giới hạn 10 bài)
@@ -31,9 +31,20 @@ namespace project_music.Services.Search
                 {
                     SongId = s.SongId,
                     Title = s.Title,
-                    // Lấy tên ca sĩ có vai trò MAIN đầu tiên
-                    ArtistName = s.ArtistSongs.Where(ast => ast.Role == "MAIN").Select(ast => ast.Artist.Name).FirstOrDefault(),
-                    CoverUrl = s.Album != null ? s.Album.CoverUrl : null
+
+                    // 👉 SỬA: Lấy trực tiếp CoverUrl của bài hát
+                    CoverUrl = s.CoverUrl,
+                    // 👉 SỬA: Lấy FileUrl để phát được nhạc
+                    FileUrl = _context.AudioFiles
+                                .Where(af => af.SongId == s.SongId)
+                                .Select(af => af.FileUrl)
+                                .FirstOrDefault(),
+                    ArtistName = s.ArtistSongs
+                                .Where(ast => ast.Role == "MAIN")
+                                .Select(ast => ast.Artist.Name)
+                                .FirstOrDefault(),
+                    DurationSeconds = s.DurationSeconds,
+                    IsVip = s.IsVip
                 })
                 .ToListAsync();
 
@@ -49,7 +60,7 @@ namespace project_music.Services.Search
                 })
                 .ToListAsync();
 
-            // 3. Tìm Playlist (Chỉ tìm các Playlist CÔNG KHAI, giới hạn 5 cái)
+            // 3. Tìm Playlist (Chỉ tìm các Playlist CÔNG KHAI)
             var playlists = await _context.Playlists
                 .Where(p => p.Name.ToLower().Contains(lowerKeyword) && p.IsPublic == true && p.IsDeleted == false)
                 .Take(5)
@@ -62,7 +73,6 @@ namespace project_music.Services.Search
                 })
                 .ToListAsync();
 
-            // Gộp tất cả lại và trả về
             return new SearchResponse
             {
                 Songs = songs,
